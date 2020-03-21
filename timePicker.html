@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="timePickerApp">
+
+<head>
+    <title></title>
+
+    <script src="libs/d3.min.js"></script>
+    <script src="libs/angular.min.js"></script>
+
+    <link rel="stylesheet" href="timePicker.css">
+</head>
+
+<body id="body" ng-controller="TimePickerCtrl">
+    <div ng-click="onClickTimer()" id="timePickerButton" class="time-container">
+        <div class="time">
+            <div>{{time.hours}} : {{time.minutes < 10 ? '0' + time.minutes : time.minutes }}</div>
+        </div>
+    </div>
+    <time-picker id="timePicker" ng-model="time"></time-picker>
+
+    <script>
+        var toto = angular.module('timePickerApp', []);
+        toto.controller('TimePickerCtrl', ['$scope', function ($scope) {
+            const date = new Date();
+            const timePicker = document.getElementById('timePicker');
+            $scope.time = {
+                hours: date.getHours(),
+                minutes: date.getMinutes()
+            };
+
+            $scope.onClickTimer = () => {
+                timePicker.style.display = timePicker.style.display === "none" ? "" : "none";
+            }
+        }]);
+
+        angular.module('timePickerApp').directive('timePicker', () => {
+            return {
+                restrict: 'EA',
+                require: 'ngModel',
+                scope: {
+                    timer: '=ngModel',
+                },
+                replace: true,
+                template: '<div></div>',
+
+                link: (scope, element, attrs) => {
+                    let inputHour = null;
+                    let inputMinute = null;
+                    let handler = null;
+
+                    const _selection = d3.select(element[0]);
+
+                    const _arc = d3.svg.arc().startAngle(0 * (Math.PI / 180)).endAngle(360 * (Math.PI /
+                        180));
+
+                    const _w = 200;
+                    const _h = _w;
+                    const _diameter = _w;
+                    const _margin = {
+                        top: 10,
+                        right: 10,
+                        bottom: 10,
+                        left: 10,
+                    };
+
+                    let _width;
+                    let _height;
+                    let _x0;
+                    let _y0;
+
+                    const _minValue = 1;
+                    const _maxValue = 1440;
+                    let _value = 1;
+
+                    _selection.each(function (data) { // eslint-disable-line
+                        measure();
+
+                        const svg = d3.select(this).selectAll('svg').data([data]);
+
+                        const enter = svg.enter().append('svg')
+                            .attr('class', 'timepicker-svg').append('g')
+                            .attr('transform', 'translate(20,20)');
+
+                        svg.attr('width', _w).attr('height', _h);
+
+                        const background = enter.append('g')
+                            .attr('class', 'timepicker-component');
+
+                        background.append('circle')
+                            .attr('class', 'timepicker-inner')
+                            .attr('transform', `translate(${_x0},${_y0})`)
+                            .attr('cx', 0)
+                            .attr('cy', 0)
+                            .attr('r', _width / 2);
+
+                        background.append('path')
+                            .attr('transform', `translate(${_x0},${_y0})`)
+                            .attr('d', _arc)
+                            .attr('class', 'timepicker-path');
+
+                        const arcContainer = enter.append('g')
+                            .attr('class', 'timepicker-arcs');
+
+                        const selectedArc = arcContainer.append('path')
+                            .attr('class', 'arc')
+                            .attr('transform', `translate(${_x0},${_y0})`)
+                            .attr('d', _arc);
+
+                        // ---------- labels for the picker ------------------------------------------
+                        const labels = enter.append('g')
+                            .attr('class', 'timepicker-labels');
+
+                        labels[0][0].innerHTML = `
+          <foreignObject class="foreign-object" width="${_width}" height="150">
+            <div class="input-container">
+              <input type="number" id="inputHour" min="0" max="23">
+              <div class="time-picker-separator">:</div>
+              <input type="number" id="inputMinute">
+            </div>
+          </foreignObject>`;
+
+                        setTimeout(() => {
+                            inputHour = document.getElementById('inputHour');
+                            inputMinute = document.getElementById('inputMinute');
+                            // TO DO
+                            // if backspace in minute go hour
+                            inputHour.oninput = () => {
+                                if (inputHour.value < 0)
+                                    inputHour.value = 0;
+                                if (String(inputHour.value.length) > 2) {
+                                    inputMinute.value = inputHour.value.slice(2);
+                                    inputHour.value = inputHour.value.slice(0, 2);
+                                    inputHour.blur();
+                                    inputMinute.focus();
+                                    return;
+                                }
+                                if (inputHour.value > 23) {
+                                    inputHour.value = inputHour.value.slice(0, 1);
+                                }
+                                scope.$apply(() => {
+                                    scope.timer.hours = Number(inputHour.value);
+                                })
+                                updateValue(scope.timer);
+                            };
+                            inputHour.onfocus = () => {
+                                inputHour.select();
+                            };
+                            inputMinute.oninput = () => {
+                                if (inputMinute.value < 0)
+                                    inputMinute.value = 0;
+                                if (String(inputMinute.value.length) > 2) {
+                                    inputMinute.value = inputMinute.value.slice(0, 2);
+                                    return;
+                                }
+                                if (inputMinute.value > 59) {
+                                    inputMinute.value = inputMinute.value.slice(0, 1);
+                                }
+                                scope.$apply(() => {
+                                    scope.timer.minutes = Number(inputMinute
+                                        .value);
+                                })
+                                updateValue(scope.timer);
+                            };
+                            inputMinute.onclick = () => {
+                                inputMinute.select();
+                            };
+                            scope.$apply(() => {
+                                setCurrent(selectedArc, true);
+                            });
+                        });
+
+                        const drag = d3.behavior.drag().on('drag', () => {
+                            const eventX = d3.event.x;
+                            const eventY = d3.event.y;
+
+                            const ox = 0;
+                            const oy = 0;
+
+                            const bx = eventX - (_width / 2);
+                            const by = (_height / 2) - eventY;
+
+                            const k = (by - oy) / (bx - ox);
+
+                            const angel = Math.abs(Math.atan(k) / (Math.PI / 180));
+                            let targetAngel = 0;
+
+                            if (bx > 0 && by >= 0) {
+                                targetAngel = 90 - angel;
+                            } else if (bx >= 0 && by < 0) {
+                                targetAngel = 90 + angel;
+                            } else if (bx < 0 && by <= 0) {
+                                targetAngel = 270 - angel;
+                            } else if (bx <= 0 && by > 0) {
+                                targetAngel = 270 + angel;
+                            }
+
+                            _value = _maxValue * (targetAngel / 360);
+
+
+                            // update scope
+                            scope.timer = {
+                                hours: Math.floor(_value / 60),
+                                minutes: Math.round(_value % 60)
+                            }
+
+                            scope.$apply(() => {
+                                setCurrent(selectedArc, true);
+                            });
+                        });
+
+                        handler = enter.append('g').append('circle')
+                            .attr('class', 'timepicker-handler')
+                            .attr('cursor', 'pointer')
+                            .attr('transform', `translate(${_x0},${_y0})`)
+                            .attr('cx', 0)
+                            .attr('cy', 0)
+                            .attr('r', 13) // rayon green circle
+                            .attr('fill', '#FFFFFF')
+                            .call(drag);
+
+                       // init
+                        const updateValue = ({
+                            hours,
+                            minutes
+                        }, needRefreshInput) => {
+                            _value = (hours * 60) + minutes;
+                            setCurrent(selectedArc, needRefreshInput);
+                        };
+
+                        updateValue(scope.timer, true);
+
+
+                        scope.$watch('timer', (newVal, _) => {
+                            updateValue(newVal, true);
+                        });
+                    });
+
+                    function measure() {
+                        _width = _height = _diameter - _margin.right - _margin.left - _margin.top - _margin
+                            .bottom;
+                        _x0 = _y0 = _width / 2;
+                        _arc.outerRadius(_width / 2);
+                        _arc.innerRadius(((_width + 40) / 2) * 0.85); // change inner radius (size border)
+                    }
+
+                    function setCurrent(selectedArc, needRefreshInput) {
+                        // set the selected arc
+                        const ratio = Math.min((_value - _minValue) / (_maxValue - _minValue), 1);
+                        const endAng = Math.min(360 * ratio, 360) * Math.PI / 180;
+                        _arc.endAngle(endAng);
+                        selectedArc.attr('d', _arc);
+
+                        // set the handler position
+                        const oAngel = (360 * _value) / _maxValue;
+                        const r = ((_width + 20) / 2) - 10;
+
+                        const x = r * Math.cos((oAngel - 90) * Math.PI / 180);
+                        const y = r * Math.sin((oAngel - 90) * Math.PI / 180);
+                        handler.attr('cx', x).attr('cy', y);
+
+                        if (needRefreshInput && inputMinute && inputHour) {
+                            inputHour.value = scope.timer.hours;
+                            inputMinute.value = scope.timer.minutes < 10 ? `0${scope.timer.minutes}` : scope
+                                .timer.minutes;
+                        }
+                    }
+                },
+            };
+        });
+
+    </script>
+
+</body>
+
+</html>

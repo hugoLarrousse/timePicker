@@ -1,0 +1,177 @@
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    background: slategrey;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-flow: column;
+}
+
+.time-container {
+    display: flex;
+    align-items: center;
+}
+
+.clock {
+    color: #22D66E;
+    width: 33px;
+    font-size: 32px;
+    margin-right: 10px;
+}
+
+.time {
+    border: 1px solid #FFFFFF;
+    width: 100px;
+    height: 35px;
+    border-radius: 10px;
+    color: #F0F0F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+}
+.time div {
+    font-family: sans-serif;
+}
+
+.newTimePicker {
+    width: 320px;
+    height: 291px;
+    background: white;
+    position: fixed;
+    z-index: 20;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 14px;
+}
+
+#timePicker {
+    margin: 15px 0 0 0;
+}
+
+.time-picker-footer {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-around;
+    height: 30px;
+    text-align: center;
+    margin: 0 0 15px 0;
+    font-family: sans-serif;
+}
+
+.pick-now {
+    width: 80px;
+    color: #024766;
+    cursor: pointer;
+}
+
+.done {
+    margin-right: 8px;
+    font-size: 12px;
+    padding: 4px 8px;
+    width: 80px;
+    background: #22d66e;
+    border: none;
+    color: #fff;
+    text-transform: uppercase;
+    box-shadow: rgba(0,0,0,.15) 4px 4px 7px 2px;
+    height: 26px;
+}
+
+.time-picker-close {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    color: #024766;
+    cursor: pointer;
+}
+
+
+
+.timepicker-svg {
+    display: block;
+    margin: 0 auto;
+    width: 200px;
+    height: 200px;
+}
+
+.timepicker-svg .x1-timepicker-background {
+    fill: #fff;
+    fill-opacity: 0.01;
+}
+
+.timepicker-svg .timepicker-component {
+    fill: #FFFFFF;
+}
+
+.timepicker-svg .timepicker-inner {
+    fill: #FFFFFF;
+}
+
+.timepicker-path {
+    fill: #024766;
+}
+
+.timepicker-handler {
+    fill: #22D66E;
+}
+
+.timepicker-svg .timepicker-labels .title {
+    font-family: Myriad, "Helvetic Neue", Helvetica, Arial;
+    text-anchor: middle;
+    fill: #024766;
+}
+
+.timepicker-svg .timepicker-labels .time,
+.timepicker-svg .timepicker-labels .ampm {
+    font-family: Myriad, "Helvetic Neue", Helvetica, Arial;
+    text-anchor: middle;
+    fill: purple;
+}
+
+.timepicker-svg .timepicker-arcs .arc {
+    fill: #024766;
+}
+
+.foreign-object {
+    position: relative;
+}
+
+.input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+input {
+    border: none;
+    width: 50px;
+    font-size: 40px;
+    text-align: center;
+    font-family: sans-serif;
+    color: #024766;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+
+.time-picker-separator {
+    font-size: 37px;
+    font-family: sans-serif;
+    color: #024766;
+}
